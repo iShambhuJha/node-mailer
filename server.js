@@ -7,14 +7,15 @@ require("dotenv").config();
 const mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
-
-const URI = "mongodb+srv://dbuser:cQZAAijuwpaN5TYj@cluster0.s5hin.mongodb.net/user-data?retryWrites=true&w=majority";
+//Connect to mongoDB
+const URI = process.env.URI;
 mongoose.connect(URI,{ useNewUrlParser: true ,useUnifiedTopology: true})
 .then(()=>{
   console.log("connected")
 })
-.catch("failedd");
+.catch("failed");
 
+//Schema
 var schemaName = new Schema({
 	name: String,
 	age: Number,
@@ -90,7 +91,7 @@ app.get("/notifyuser", (req, res) => {
   });
   // sendemail();
   fetch(
-    "https://covid-tracker-india-9e179-default-rtdb.firebaseio.com/users.json"
+    "https://notify-nodemailer.herokuapp.com/getUsers"
   )
     .then((res) => res.json())
     .then((json) => {
