@@ -4,6 +4,27 @@ const nodemailer = require("nodemailer");
 const fetch = require("node-fetch");
 const cron = require("node-cron");
 require("dotenv").config();
+const mongoose = require('mongoose');
+var Schema = mongoose.Schema;
+
+
+const URI = "mongodb+srv://dbuser:cQZAAijuwpaN5TYj@cluster0.s5hin.mongodb.net/user-data?retryWrites=true&w=majority";
+mongoose.connect(URI,{ useNewUrlParser: true ,useUnifiedTopology: true})
+.then(()=>{
+  console.log("connected")
+})
+.catch("failedd");
+
+var schemaName = new Schema({
+	name: String,
+	age: Number,
+  email: String,
+  pin: String
+}, {
+	collection: 'users'
+});
+
+var Model = mongoose.model('Model', schemaName);
 
 let email = process.env.EMAIL;
 let password = process.env.PASSWORD;
@@ -22,6 +43,44 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // parse requests of content-type - application/json
 app.use(bodyParser.json());
+
+app.use((req,res,next)=>{
+  res.setHeader("Access-Control-Allow-Origin","*");
+  res.setHeader("Access-Control-Allow-Headers",
+      "Origin, X-Requested-With, Content-Type,Accept");
+  res.setHeader("Access-Control-Allow-Methods","GET,POST,PUT,DELETE,PATCH,OPTIONS");
+  next();
+});
+
+app.post("/addUser",(req,res,next)=>{
+
+  const post = new Model({
+    name: req.body.name,
+    age: req.body.age,
+    email:req.body.email,
+    pin: req.body.pin,
+  });
+  post.save().then(result=>{
+    res.status(200).json({
+      message:'success: added user'
+    });
+  });
+
+});
+
+app.get('/getUsers', function(req, res) {
+
+	Model.find({}, function(err, result) {
+		if (err) throw err;
+		if (result) {
+			res.json(result)
+		} else {
+			res.send(JSON.stringify({
+				error : 'Error'
+			}))
+		}
+	})
+})
 
 // define a simple route
 app.get("/notifyuser", (req, res) => {
