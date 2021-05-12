@@ -1,14 +1,15 @@
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const fetch = require("node-fetch");
 const cron = require("node-cron");
-require("dotenv").config();
 const mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 
 //Connect to mongoDB
 const URI = process.env.URI;
+console.log(URI,'URI');
 mongoose
   .connect(URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
@@ -98,7 +99,7 @@ app.get("/notifyuser", (req, res) => {
       "Welcome to EasyNotes application. Take notes quickly. Organize and keep track of all your notes.",
   });
   // sendemail();
-  fetch("http://localhost:3000/getUsers")
+  fetch("https://notify-nodemailer.herokuapp.com/getUsers")
     .then((res) => res.json())
     .then((json) => {
       console.log("First user in the array:");
