@@ -1,0 +1,139 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lesson11 - step00</title>
+<style>
+table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+tr:nth-child(even) {
+  background-color: #dddddd;
+}
+</style>
+    <style>
+
+      .container600 { width: 600px; max-width: 100%; } @media all and
+      (max-width: 599px) { .container600 { width: 100% !important; } }
+
+    </style>
+
+    <!--[if gte mso 9]>
+        <style>
+            .ol {
+              width: 100%;
+            }
+        </style>
+    <![endif]-->
+
+  </head>
+  <body style="background-color:#F4F4F4;">
+    <center>
+
+      <!--[if gte mso 9]><table width="600" cellpadding="0" cellspacing="0"><tr><td>
+                    <![endif]-->
+      <table
+        class="container600"
+        cellpadding="0"
+        cellspacing="0"
+        border="0"
+        width="100%"
+        style="width:calc(100%);max-width:calc(600px);margin: 0 auto;"
+      >
+        <tr>
+          <td width="100%" style="text-align: left;">
+            <table
+              width="100%"
+              cellpadding="0"
+              cellspacing="0"
+              style="min-width:100%;"
+            >
+              <tr>
+                <td
+                  style="background-color:#F8F7F0;color:#58585A;padding:30px;"
+                >
+
+                  <h3>COIVID 19 AVAILABLE SLOT DETAILS</h3>
+                  <h3>Hi {{name}} , Please find the slot availability details below:</h3>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:20px;background-color:#F8F7F0;">
+
+                  <table
+                    width="100%"
+                    cellpadding="0"
+                    cellspacing="0"
+                    style="min-width:100%;"
+                  >
+                    <thead>
+                      <tr>
+                        <th
+                          scope="col"
+                          style="padding:5px; font-family: Arial,sans-serif; font-size: 16px; line-height:20px;line-height:30px"
+                        >Centre</th>
+                        <th
+                          scope="col"
+                          style="padding:5px; font-family: Arial,sans-serif; font-size: 16px; line-height:20px;line-height:30px"
+                        >Address</th>
+                        <th
+                          scope="col"
+                          style="padding:5px; font-family: Arial,sans-serif; font-size: 16px; line-height:20px;line-height:30px"
+                        >Pincode</th>
+                        <th
+                          scope="col"
+                          style="padding:5px; font-family: Arial,sans-serif; font-size: 16px; line-height:20px;line-height:30px"
+                        >Total Avlbl</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {{#each slotsData}}
+                        <tr>
+                          <td valign="top" style="padding:5px; font-family: Arial,sans-serif; font-size: 16px; line-height:20px;">{{name}}
+                          </td>
+                          <td valign="top" style="padding:5px; font-family: Arial,sans-serif; font-size: 16px; line-height:20px;">{{address}}</td>
+                          <td valign="top" style="padding:5px; font-family: Arial,sans-serif; font-size: 16px; line-height:20px;">{{pincode}}</td>
+                          <td valign="top" style="padding:5px; font-family: Arial,sans-serif; font-size: 16px; line-height:20px;">{{totalVaccine}}</td>
+                        </tr>
+                      {{/each}}
+                    </tbody>
+                  </table>
+
+                </td>
+              </tr>
+            </table>
+            <table
+              width="100%"
+              cellpadding="0"
+              cellspacing="0"
+              style="min-width:100%;"
+            >
+              <tr>
+                <td
+                  width="100%"
+                  style="min-width:100%;background-color:#58585A;color:#FFFFFF;padding:30px;"
+                >
+                  <p
+                    style="font-size:16px;line-height:20px;font-family:Georgia,Arial,sans-serif;text-align:center;"
+                  ></p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>>
+
+      <!--[if gte mso 9]></td></tr></table>
+                    <![endif]-->
+    </center>
+  </body>
+</html>

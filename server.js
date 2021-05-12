@@ -4,9 +4,11 @@ const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const fetch = require("node-fetch");
 const cron = require("node-cron");
+const hbs = require("nodemailer-express-handlebars");
+const path = require('path');
 const mongoose = require("mongoose");
 var Schema = mongoose.Schema;
-
+var mn="shambhu"
 //Connect to mongoDB
 const URI = process.env.URI;
 console.log(URI,'URI');
@@ -37,9 +39,75 @@ let password = process.env.PASSWORD;
 const port = process.env.PORT || 3000;
 
 //run cron job
-// cron.schedule('* * * * *', () => {
-//   console.log('running a task every minute');
-// });
+cron.schedule('* * * * *', () => {
+    // sendemail();
+    fetch("https://notify-nodemailer.herokuapp.com/getUsers")
+    .then((res) => res.json())
+    .then((json) => {
+      console.log("First user in the array:");
+      console.log(json);
+      var today = new Date();
+      var dd = String(today.getDate()).padStart(2, "0");
+      var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
+      var yyyy = today.getFullYear();
+
+      today = dd + "-" + mm + "-" + yyyy;
+      allUsers = json;
+      loop1: for (var i = 0; i < allUsers.length; i++) {
+        const params = { pincode: allUsers[i].pin, date: today };
+        const urlParams = new URLSearchParams(Object.entries(params));
+        fetch(
+          "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?" +
+            urlParams,
+          {
+            method: "GET",
+            headers: {
+              Accept: "*/*",
+              "User-Agent":
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
+            },
+          }
+        )
+          .then((res) => res.json())
+          .then((data) => {
+            console.log(data);
+            var centers = [];
+            var avlblSlots = [];
+            var avlbCenters = [];
+
+            centers = data.centers;
+            if(centers.length>0){
+            loop2: for (var j = 0; j < centers.length; j++) {
+              loop3: for (var k = 0; k < centers[j].sessions.length; k++) {
+                if (
+                  centers[j].sessions[k].min_age_limit == allUsers[i].age &&
+                  centers[j].sessions[k].available_capacity > 0
+                ) {
+                  console.log("avvailbale", centers[j]);
+                  avlbCenters.push(centers[j]);
+                  // avlblSlots.push(centers[j].sessions[k]);
+                }
+                if (j == centers.length-1) {
+
+                  for(var c=0;c<avlbCenters.length;c++){
+                    var totalAvlbl;
+                    totalAvlbl=0;
+                    for(var a=0;a<avlbCenters[c].sessions.length;a++){
+                      totalAvlbl += avlbCenters[c].sessions[a].available_capacity;
+                      avlbCenters[c]["totalVaccine"] = totalAvlbl;
+                    }
+
+                  }
+
+                  sendemail(avlbCenters,allUsers[i].email,allUsers[i].name);
+                }
+              }
+            }
+          }
+          })(i);
+      }
+    });
+});
 
 // create express app
 const app = express();
@@ -98,73 +166,21 @@ app.get("/notifyuser", (req, res) => {
     message:
       "Welcome to EasyNotes application. Take notes quickly. Organize and keep track of all your notes.",
   });
-  // sendemail();
-  fetch("https://notify-nodemailer.herokuapp.com/getUsers")
-    .then((res) => res.json())
-    .then((json) => {
-      console.log("First user in the array:");
-      console.log(json);
-      var today = new Date();
-      var dd = String(today.getDate()).padStart(2, "0");
-      var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
-      var yyyy = today.getFullYear();
 
-      today = dd + "-" + mm + "-" + yyyy;
-      allUsers = json;
-      loop1: for (var i = 0; i < allUsers.length; i++) {
-        const params = { pincode: allUsers[i].pin, date: today };
-        const urlParams = new URLSearchParams(Object.entries(params));
-        fetch(
-          "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?" +
-            urlParams,
-          {
-            method: "GET",
-            headers: {
-              Accept: "*/*",
-              "User-Agent":
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
-            },
-          }
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            console.log(data);
-            var centers = [];
-            var avlblSlots = [];
-            var avlbCenters = [];
-            centers = data.centers;
-            if(centers.length>0){
-            loop2: for (var j = 0; j < centers.length; j++) {
-              loop3: for (var k = 0; k < centers[j].sessions.length; k++) {
-                if (
-                  centers[j].sessions[k].min_age_limit == allUsers[i].age &&
-                  centers[j].sessions[k].available_capacity > 0
-                ) {
-                  console.log("avvailbale", centers[j]);
-                  avlbCenters.push(centers[j]);
-                  // avlblSlots.push(centers[j].sessions[k]);
-                }
-                if (j == centers.length-1) {
-                  let ids = avlbCenters.map((o) => o.center_id);
-                  let filtered = avlbCenters.filter(
-                    ({ center_id }, index) => !ids.includes(center_id, index + 1)
-                  );
-                  console.log(filtered)
-                }
-              }
-            }
-          }
-          })(i);
-      }
-    });
 });
+
 
 // listen for requests
 app.listen(port, () => {
   console.log("Server is listening on port 3000");
 });
 
-function sendemail() {
+function sendemail(slots,userEmailId,userName) {
+  let ids = slots.map((o) => o.center_id);
+  let filtered = slots.filter(
+    ({ center_id }, index) => !ids.includes(center_id, index + 1)
+  );
+  console.log(filtered)
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -176,12 +192,30 @@ function sendemail() {
       refreshToken: process.env.OAUTH_REFRESH_TOKEN,
     },
   });
+  const handlebarOptions = {
+    viewEngine: {
+      extName: ".handlebars",
+      partialsDir: path.resolve(__dirname, "views"),
+      defaultLayout: false,
+    },
+    viewPath: path.resolve(__dirname, "views"),
+    extName: ".handlebars",
+  };
+  transporter.use(
+    "compile",
+    hbs(handlebarOptions)
+  );
 
   var mailOptions = {
     from: "info.mailer014@gmail.com",
-    to: "shambhu.jha014@gmail.com",
+    to: userEmailId,
     subject: "COVID-19 VACCINATION SLOT NOW AVAILABLE",
-    text: "COVID-19 VACCINATION SLOT NOW AVAILABLE",
+    text:"hi",
+    template:'index',
+    context: {
+      slotsData: filtered,
+      name:userName
+  }
   };
 
   transporter.sendMail(mailOptions, function (error, info) {
