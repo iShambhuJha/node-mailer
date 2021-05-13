@@ -11,7 +11,6 @@ var Schema = mongoose.Schema;
 var mn="shambhu"
 //Connect to mongoDB
 const URI = process.env.URI;
-console.log(URI,'URI');
 mongoose
   .connect(URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {
@@ -44,8 +43,6 @@ cron.schedule('* * * * *', () => {
     fetch("https://notify-nodemailer.herokuapp.com/getUsers")
     .then((res) => res.json())
     .then((json) => {
-      console.log("First user in the array:");
-      console.log(json);
       var today = new Date();
       var dd = String(today.getDate()).padStart(2, "0");
       var mm = String(today.getMonth() + 1).padStart(2, "0"); //January is 0!
@@ -53,59 +50,57 @@ cron.schedule('* * * * *', () => {
 
       today = dd + "-" + mm + "-" + yyyy;
       allUsers = json;
-      loop1: for (var i = 0; i < allUsers.length; i++) {
-        const params = { pincode: allUsers[i].pin, date: today };
-        const urlParams = new URLSearchParams(Object.entries(params));
-        fetch(
-          "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?" +
-            urlParams,
-          {
-            method: "GET",
-            headers: {
-              Accept: "*/*",
-              "User-Agent":
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
-            },
-          }
-        )
-          .then((res) => res.json())
-          .then((data) => {
-            console.log(data);
-            var centers = [];
-            var avlblSlots = [];
-            var avlbCenters = [];
-
-            centers = data.centers;
-            if(centers.length>0){
-            loop2: for (var j = 0; j < centers.length; j++) {
-              loop3: for (var k = 0; k < centers[j].sessions.length; k++) {
-                if (
-                  centers[j].sessions[k].min_age_limit == allUsers[i].age &&
-                  centers[j].sessions[k].available_capacity > 0
-                ) {
-                  console.log("avvailbale", centers[j]);
-                  avlbCenters.push(centers[j]);
-                  // avlblSlots.push(centers[j].sessions[k]);
-                }
-                if (j == centers.length-1) {
-
-                  for(var c=0;c<avlbCenters.length;c++){
-                    var totalAvlbl;
-                    totalAvlbl=0;
-                    for(var a=0;a<avlbCenters[c].sessions.length;a++){
-                      totalAvlbl += avlbCenters[c].sessions[a].available_capacity;
-                      avlbCenters[c]["totalVaccine"] = totalAvlbl;
-                    }
-
+      allUsers.forEach(element => {
+          const params = { pincode: element.pin, date: today };
+          const urlParams = new URLSearchParams(Object.entries(params));
+           fetch(
+            "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByPin?" +
+              urlParams,
+            {
+              method: "GET",
+              headers: {
+                Accept: "*/*",
+                "User-Agent":
+                  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36",
+              },
+            }
+          )
+            .then((res) => res.json())
+            .then((data) => {
+              var centers = [];
+              var avlblSlots = [];
+              var avlbCenters = [];
+  
+              centers = data.centers;
+              if(centers.length>0){
+              loop2: for (var j = 0; j < centers.length; j++) {
+                loop3: for (var k = 0; k < centers[j].sessions.length; k++) {
+                  if (
+                    centers[j].sessions[k].min_age_limit == element.age &&
+                    centers[j].sessions[k].available_capacity > 0
+                  ) {
+                    avlbCenters.push(centers[j]);
+                    // avlblSlots.push(centers[j].sessions[k]);
                   }
-
-                  sendemail(avlbCenters,allUsers[i].email,allUsers[i].name);
+                  if (j == centers.length-1) {
+  
+                    for(var c=0;c<avlbCenters.length;c++){
+                      var totalAvlbl;
+                      totalAvlbl=0;
+                      for(var a=0;a<avlbCenters[c].sessions.length;a++){
+                        totalAvlbl += avlbCenters[c].sessions[a].available_capacity;
+                        avlbCenters[c]["totalVaccine"] = totalAvlbl;
+                      }
+  
+                    }
+  
+                    sendemail(avlbCenters,element.email,element.name);
+                  }
                 }
               }
             }
-          }
-          })(i);
-      }
+            })
+      }); 
     });
 });
 
@@ -176,11 +171,11 @@ app.listen(port, () => {
 });
 
 function sendemail(slots,userEmailId,userName) {
+  console.log(userEmailId)
   let ids = slots.map((o) => o.center_id);
   let filtered = slots.filter(
     ({ center_id }, index) => !ids.includes(center_id, index + 1)
   );
-  console.log(filtered)
   let transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
